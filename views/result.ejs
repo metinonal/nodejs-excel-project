@@ -3,22 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Excel to CSV Converter</title>
+    <title>CSV Dönüştürme Sonucu</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="/styles.css">
+    <style>
+        #loading {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            text-align: center;
+            padding-top: 20%;
+        }
+    </style>
 </head>
 <body>
     <div class="container mt-5">
-        <h2 class="text-center">Dosya Başarıyla Yüklendi ve Dönüştürüldü</h2>
-        <div class="mt-4 p-4 border rounded text-center">
-            <a href="/uploads/<%= csvFileName %>" class="btn btn-success">CSV Dosyasını İndir</a>
+        <h1 class="mb-4">CSV Dönüştürme Sonucu</h1>
+        <a href="/uploads/<%= csvFileName %>" class="btn btn-primary mb-3">CSV Dosyasını İndir</a>
+        <h2>CSV Dosyası İçeriği</h2>
+        <div id="loading">
+            <div class="spinner-border text-primary" role="status">
+                <span class="sr-only">Yükleniyor...</span>
+            </div>
         </div>
-        <div class="text-center mt-3">
-            <a href="/" class="btn btn-secondary">Yeni Bir Dosya Yükle</a>
-        </div>
+        <table class="table table-bordered" id="csvPreview">
+            <thead>
+                <tr>
+                    <% if (csvData.length > 0) { %>
+                        <% Object.keys(csvData[0]).forEach(header => { %>
+                            <th><%= header %></th>
+                        <% }) %>
+                    <% } %>
+                </tr>
+            </thead>
+            <tbody>
+                <% csvData.slice(0, 25).forEach(row => { %>
+                    <tr>
+                        <% Object.values(row).forEach(cell => { %>
+                            <td><%= cell %></td>
+                        <% }) %>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
     </div>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            showLoading();
+            fetch('/uploads/<%= csvFileName %>')
+                .then(response => response.json())
+                .then(data => {
+                    const tableBody = document.querySelector('#csvPreview tbody');
+                    data.slice(0, 25).forEach(row => {
+                        const rowElement = document.createElement('tr');
+                        Object.values(row).forEach(cell => {
+                            const cellElement = document.createElement('td');
+                            cellElement.textContent = cell;
+                            rowElement.appendChild(cellElement);
+                        });
+                        tableBody.appendChild(rowElement);
+                    });
+                    hideLoading();
+                })
+                .catch(error => {
+                    console.error('CSV dosyası okunurken bir hata oluştu:', error);
+                    hideLoading();
+                });
+        });
+
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+    </script>
 </body>
 </html>

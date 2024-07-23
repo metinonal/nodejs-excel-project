@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
 const ExcelJS = require('exceljs');
+const crypto = require('crypto');
 
 const app = express();
 const port = 3000;
@@ -11,13 +12,20 @@ app.set('view engine', 'ejs');
 app.use(express.static('public'));
 app.use('/uploads', express.static('uploads')); // Statik dosyalar için ekleme
 
+// Rastgele dosya adı oluşturma fonksiyonu
+const generateRandomFileName = (originalName) => {
+    const randomString = crypto.randomBytes(16).toString('hex');
+    return randomString + path.extname(originalName);
+}
+
 // Multer ayarları
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, 'uploads/');
     },
     filename: function (req, file, cb) {
-        cb(null, Date.now() + '-' + file.originalname);
+        const randomFileName = generateRandomFileName(file.originalname);
+        cb(null, randomFileName);
     }
 });
 const upload = multer({ storage: storage });
@@ -30,7 +38,7 @@ app.post('/upload', upload.single('excelFile'), async (req, res) => {
     try {
         const filePath = req.file.path;
         const originalName = req.file.originalname;
-        const csvFileName = originalName.replace(path.extname(originalName), '.csv');
+        const csvFileName = generateRandomFileName(originalName).replace(path.extname(originalName), '.csv');
 
         const workbook = new ExcelJS.Workbook();
         await workbook.xlsx.readFile(filePath);

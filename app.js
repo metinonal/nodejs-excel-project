@@ -58,8 +58,7 @@ app.post('/upload', upload.single('excelFile'), async (req, res) => {
             }
         });
 
-        // Manuel başlık
-        const headers = ['Bölge', 'Zip Code', 'Araç tipi', 'Taşıma', 'Tutar']; // Bu başlıkları manuel olarak belirleyin
+        const headers = ['Bölge', 'Zip Code', 'Araç tipi', 'Taşıma', 'Tutar']; 
         const csvContent = [headers.join(',')].concat(csvData).join('\n');
         const csvFilePath = path.join(__dirname, 'uploads', `${Date.now()}-output.csv`);
         fs.writeFileSync(csvFilePath, csvContent);
